@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using AddressProcessing.CSV;
 using AddressProcessor.Tests.Extensions;
+using AddressProcessor.Tests.TestClasses;
 using Xunit;
 
 namespace Csv.Tests
@@ -16,7 +17,7 @@ namespace Csv.Tests
         {
             var textWriter = new StringWriter();
             // Given a writer
-            var writer = new CSVReaderWriter(f => null,
+            var writer = new FakeCSVReaderWriter(f => null,
                 f => textWriter);
 
             // When I write an empty string
@@ -33,7 +34,7 @@ namespace Csv.Tests
         {
             // Given a writer
             var textWriter = new StringWriter();
-            var writer = new CSVReaderWriter(f => null,
+            var writer = new FakeCSVReaderWriter(f => null,
                 f => textWriter);
 
             // When I write a TSV
@@ -50,7 +51,7 @@ namespace Csv.Tests
         {
             // Given a reader
             var streamReader = $"First\tSecond{Environment.NewLine}Third\tFourth{Environment.NewLine}".ToStream();
-            var reader = new CSVReaderWriter(f => streamReader, f => null);
+            var reader = new FakeCSVReaderWriter(f => streamReader, f => null);
 
             // When I read
             reader.Open("Arbitrary", CSVReaderWriter.Mode.Read);

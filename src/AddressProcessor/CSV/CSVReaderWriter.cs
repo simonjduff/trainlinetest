@@ -12,28 +12,16 @@ namespace AddressProcessing.CSV
 
     public class CSVReaderWriter : IDisposable
     {
-        public CSVReaderWriter()
-        {
-            BuildStreamReader = filename => File.OpenText(filename);
-            BuildTextWriter = filename => {
-                FileInfo fileInfo = new FileInfo(filename);
-                return fileInfo.CreateText();
-            };
-        }
-
-        // Injection of test streams given we can't change the callers
-        // and implement proper IoC/DI
-        public CSVReaderWriter(Func<string,StreamReader> reader,
-            Func<string,TextWriter> writer)
-        {
-            BuildStreamReader = reader;
-            BuildTextWriter = writer;
-        }
         private StreamReader _readerStream = null;
         private TextWriter _writerStream = null;
 
-        private readonly Func<string,StreamReader> BuildStreamReader;
-        private readonly Func<string,TextWriter> BuildTextWriter;
+        protected virtual Func<string,StreamReader> BuildStreamReader
+            => filename => File.OpenText(filename);
+        protected virtual Func<string,TextWriter> BuildTextWriter
+            => filename => {
+                FileInfo fileInfo = new FileInfo(filename);
+                return fileInfo.CreateText();
+            };
 
         // Leaving [Flags] in only for backwards compatibility#
         // until we can be certain this change won't cause
@@ -77,7 +65,7 @@ namespace AddressProcessing.CSV
             /*
              * Tt's unclear whether handling an exception here would be appropriate.
              */
-            WriteLine(line);
+            _writerStream.WriteLine(line);
         }
 
         public bool Read(string column1, string column2)
@@ -110,7 +98,7 @@ namespace AddressProcessing.CSV
 
             try
             {
-                var line = ReadLine();
+                var line = _readerStream.ReadLine();
 
                 string[] columns = line?.Split('\t');
 
@@ -142,16 +130,6 @@ namespace AddressProcessing.CSV
                 column2 = null;
                 return false;
             }
-        }
-
-        private void WriteLine(string line)
-        {
-            _writerStream.WriteLine(line);
-        }
-
-        private string ReadLine()
-        {
-            return _readerStream.ReadLine();
         }
 
         /* Without freedom to change AddressFileProcessor or other callers
