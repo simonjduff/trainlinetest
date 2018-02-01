@@ -3,6 +3,11 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
+/*
+ * Assumptions
+ * - dotnet core 2 is ok. Targeting netstandard2 and net462
+ * - c#6 is ok (null progatation)
+ */
 namespace AddressProcessing.CSV
 {
     /*
@@ -26,7 +31,7 @@ namespace AddressProcessing.CSV
                 return fileInfo.CreateText();
             };
 
-        // Leaving [Flags] in only for backwards compatibility#
+        // Leaving [Flags] in only for backwards compatibility
         // until we can be certain removing it won't cause
         // compilation issues for a caller. This is very unlikely however
         // as the equality (==) checks would make multiple flags meaningless.

@@ -55,20 +55,20 @@ namespace Csv.Tests
 
             // When I read
             reader.Open("Arbitrary", CSVReaderWriter.Mode.Read);
-            List<(string first, string second)> results = new List<(string first, string second)>();
+            List<Tuple<string, string>> results = new List<Tuple<string,string>>();
             string first;
             string second;
             while (reader.Read(out first, out second))
             {
-                results.Add((first, second));
+                results.Add(new Tuple<string,string>(first, second));
             }
 
             // Then the results are correct
             Assert.Equal(2, results.Count());
-            Assert.Equal("First", results[0].first);
-            Assert.Equal("Second", results[0].second);
-            Assert.Equal("Third", results[1].first);
-            Assert.Equal("Fourth", results[1].second);
+            Assert.Equal("First", results[0].Item1);
+            Assert.Equal("Second", results[0].Item2);
+            Assert.Equal("Third", results[1].Item1);
+            Assert.Equal("Fourth", results[1].Item2);
         }
 
         [Fact]
@@ -80,18 +80,18 @@ namespace Csv.Tests
 
             // When I read
             reader.Open("Arbitrary", CSVReaderWriter.Mode.Read);
-            List<(string first, string second)> results = new List<(string first, string second)>();
+            List<Tuple<string, string>> results = new List<Tuple<string,string>>();
             string first;
             string second;
             while (reader.Read(out first, out second))
             {
-                results.Add((first, second));
+                results.Add(new Tuple<string,string>(first, second));
             }
 
             // Then the results are correct
             Assert.Equal(1, results.Count());
-            Assert.Equal("First", results[0].first);
-            Assert.Equal("Second", results[0].second);
+            Assert.Equal("First", results[0].Item1);
+            Assert.Equal("Second", results[0].Item2);
         }
     }
 }
