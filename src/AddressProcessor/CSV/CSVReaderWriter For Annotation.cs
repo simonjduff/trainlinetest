@@ -8,9 +8,24 @@ namespace AddressProcessing.CSV
 
         Please leave the rest of this file as it is so we can discuss your concerns during the next stage of the interview process.
         
-        *)
-        *)
-        *)
+        *) Mode is [Flags] but checked with Equality (==). 
+            The way this is coded suggests mutually exclusive states,
+            but the [Flags] suggest Mode can be both states at once.
+            This is confusing for a developer coming in and could be indicative of
+            bad modelling or a future bug.
+        *) An exception during read/write won't close the streams. The closing should be
+            handled using the IDisposable interface implemented on File streams.
+        *) You can write N columns, but only read 2 columns. This lacks consistency,
+            genericness, and violates Open/Closed principle. If this is a generic CSV implementation
+            it should be agnostic about the number of columns and return a collection. If it's
+            specific for AddressProcessing, it should have Domain names rather than
+            column1, column2. Strongly suggest keeping this generic and implementing
+            the Domain side in a calling class.
+        *) You can Open a Stream in Write or Read mode, but then call Write or Read
+            in opposition of the Open mode. Ie another developer could call Open(Read)
+            and then Write(), which would fail. Close the streams using IDisposable.
+        *) Duplication between the two Read methods. Why does the non-Out Read method
+            even exist? Is this a previous iteration of code that should've been cleaned up? 
     */
 
     public class CSVReaderWriterForAnnotation
