@@ -5,8 +5,11 @@ using System.Text;
 
 /*
  * Assumptions
- * - dotnet core 2 is ok. Targeting netstandard2 and net462
- * - c#6 is ok (null progatation)
+ * - dotnet core 2 is ok.
+ *      (I'm writing this in Sri Lanka with no real internet and only dotnet core
+ *         and VS Code installed)
+ * - c#6 is ok (null propagation)
+ * - xUnit is ok, rather than NUnit 2 (which doesn't work with dotnet core)
  */
 namespace AddressProcessing.CSV
 {
@@ -15,14 +18,19 @@ namespace AddressProcessing.CSV
            Assume this code is in production and backwards compatibility must be maintained.
     */
 
-    // We could extract an interface here to allow for substitution
-    // during testing. I haven't done so, as it's a two-click refactor
-    // and seems unncessary unless we're actually doing that kind of mocking.
+    /* 
+     * We could extract an interface here to allow for substitution
+     * during testing. I haven't done so, as it's trivial to do
+     * and seems unncessary unless we're actually doing that kind of mocking.
+     */
     public class CSVReaderWriter : IDisposable
     {
         private StreamReader _readerStream = null;
         private TextWriter _writerStream = null;
 
+        // These funcs allow tests to inject fake streamreaders/writers.
+        // These file operations could be moved to a new class with an interface,
+        // but given their simplicity that feels unnecessary.
         protected virtual Func<string,StreamReader> BuildStreamReader
             => filename => File.OpenText(filename);
         protected virtual Func<string,TextWriter> BuildTextWriter
@@ -31,13 +39,14 @@ namespace AddressProcessing.CSV
                 return fileInfo.CreateText();
             };
 
-        // Leaving [Flags] in only for backwards compatibility
-        // until we can be certain removing it won't cause
-        // compilation issues for a caller. This is very unlikely however
-        // as the equality (==) checks would make multiple flags meaningless.
+        /*
+         * Leaving [Flags] in only for backwards compatibility
+         * until we can be certain removing it won't cause
+         * compilation issues for a caller. This is very unlikely however
+         * as the equality (==) checks would make multiple flags meaningless.
+         */
         [Flags]
         public enum Mode { Read = 1, Write = 2};
-        private Mode? _mode = null;
 
         public void Open(string fileName, Mode mode)
         {
@@ -52,19 +61,19 @@ namespace AddressProcessing.CSV
                 // default should only be possible if mode is Read|Write
                 default: throw new Exception($"Unknown file mode for {fileName}");
             }
-
-            _mode = mode;
         }
 
         public void Write(params string[] columns)
         {
-            if (_mode != Mode.Write || _writerStream == null)
+            if (_writerStream == null)
             {
                 throw new Exception("Not in write mode. Cannot write to file.");
             }
 
-            // It might be invalid to to write only one column
-            // but until that's validated, not adding the check
+            /* The original code permitted writing of only one column.
+             * This might or might not be valid, so without confirmation,
+             * I'm not adding a minimum column count check here
+             */
             if (columns == null || !columns.Any())
             {
                 return;
@@ -83,25 +92,21 @@ namespace AddressProcessing.CSV
 
         public bool Read(string column1, string column2)
         {
-            if (_mode != Mode.Read || _readerStream == null)
-            {
-                throw new Exception("Not in read mode. Cannot read from file");
-            }
-
-            // This can't output column1, column2 as they're not ref/out.
+            // This method can't output column1, column2 as they're not ref/out.
             string dummy = string.Empty;
             string dummy2 = string.Empty;
 
             // For backwards compatibility, we'll maintain the bool return
             // though this is unlikely to be meaningful.
-            return Read(out dummy, out dummy2);
-            
+            return Read(out dummy, out dummy2);   
         }
 
         public bool Read(out string column1, out string column2)
         {
-            const int FIRST_COLUMN = 0;
-            const int SECOND_COLUMN = 1;
+            if (_readerStream == null)
+            {
+                throw new Exception("Not in read mode. Cannot read from file");
+            }
 
             column1 = null;
             column2 = null;
@@ -121,21 +126,26 @@ namespace AddressProcessing.CSV
                 } 
                 else
                 {
-                    column1 = columns[FIRST_COLUMN];
-                    column2 = columns[SECOND_COLUMN];
+                    // Removed the const column names as they weren't
+                    // meaningful and it's clear what the index is doing
+                    column1 = columns[0];
+                    column2 = columns[1];
 
                     return true;
                 }   
             }
             catch
             {
-                // This situation should be logged and reported.
-                // This will prevent a hard crash and return as if
-                // there was no data.
-                // Another option would be to throw up the stack
-                // and let callers handle how they want.
+                /*
+                 * This situation should be logged and reported.
+                 * This catch will prevent a hard crash and return as if
+                 * there was no data.
+                 * Another option would be to throw up the stack
+                 * and let callers handle how they want.
+                 */
 
-                /* Re-setting the nulls here as
+                /* 
+                * Re-setting the nulls here as
                 * column1 = columns[0] could pass and then
                 * exception thrown on column2 = columns[1]
                 * which would be unexpected behaviour for this class.
