@@ -16,7 +16,13 @@ namespace AddressProcessor.Tests.TestClasses
             _writer = writer;
         }
 
-        protected override Func<string,StreamReader> BuildStreamReader => _reader;
-        protected override Func<string, TextWriter> BuildTextWriter => _writer;
+        protected override StreamReader BuildStreamReader(string filename)
+        {
+            return _reader(filename);
+        }
+        protected override TextWriter BuildTextWriter(string filename)
+        {
+            return _writer(filename);
+        }
     }
 }

@@ -28,16 +28,18 @@ namespace AddressProcessing.CSV
         private StreamReader _readerStream = null;
         private TextWriter _writerStream = null;
 
-        // These funcs allow tests to inject fake streamreaders/writers.
+        // These virtuals allow tests to inject fake streamreaders/writers.
         // These file operations could be moved to a new class with an interface,
         // but given their simplicity that feels unnecessary.
-        protected virtual Func<string,StreamReader> BuildStreamReader
-            => filename => File.OpenText(filename);
-        protected virtual Func<string,TextWriter> BuildTextWriter
-            => filename => {
-                FileInfo fileInfo = new FileInfo(filename);
-                return fileInfo.CreateText();
-            };
+        protected virtual StreamReader BuildStreamReader(string filename)
+        {
+            return File.OpenText(filename);
+        }
+        protected virtual TextWriter BuildTextWriter(string filename)
+        {
+            FileInfo fileInfo = new FileInfo(filename);
+            return fileInfo.CreateText();
+        }
 
         /*
          * Leaving [Flags] in only for backwards compatibility
